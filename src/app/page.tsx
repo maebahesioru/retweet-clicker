@@ -1,65 +1,147 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { useGameState, WORDS } from "@/hooks/useGameState";
+import { Layout } from "@/components/Layout";
+import { HomePage } from "@/components/HomePage";
+import { ShopPage } from "@/components/ShopPage";
+import { AchievementsPage } from "@/components/AchievementsPage";
+import { SettingsPage } from "@/components/SettingsPage";
+import { TypingModal } from "@/components/TypingModal";
 
 export default function Home() {
+  const game = useGameState();
+  const [currentPage, setCurrentPage] = useState<"home" | "shop" | "achievements" | "settings">("home");
+  
+  // タイピングゲーム用
+  const [showTypingGame, setShowTypingGame] = useState(false);
+  const [targetWord, setTargetWord] = useState("");
+  const [typedWord, setTypedWord] = useState("");
+  const [typingTimeLeft, setTypingTimeLeft] = useState(0);
+  
+  // 引用用
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [quoteTargetWord, setQuoteTargetWord] = useState("");
+  const [quoteText, setQuoteText] = useState("");
+  const [quoteTimeLeft, setQuoteTimeLeft] = useState(0);
+
+  const startTypingGame = () => {
+    const word = WORDS[Math.floor(Math.random() * WORDS.length)];
+    setTargetWord(word);
+    setTypedWord("");
+    setTypingTimeLeft(5 + game.timeExtend);
+    setShowTypingGame(true);
+  };
+
+  const startQuote = (word: string, time: number) => {
+    setQuoteTargetWord(word);
+    setQuoteText("");
+    setQuoteTimeLeft(time);
+    setShowQuoteModal(true);
+  };
+
+  // タイピングタイマー
+  useEffect(() => {
+    if (!showTypingGame || typingTimeLeft <= 0) return;
+    const timer = setTimeout(() => setTypingTimeLeft((prev) => prev - 1), 1000);
+    if (typingTimeLeft === 1) {
+      setTimeout(() => {
+        const penalty = Math.max(1, game.clickPower - Math.floor((game.clickPower - 1) * (1 - game.flameGuard * 0.2)));
+        game.setClickPower(penalty);
+        setShowTypingGame(false);
+      }, 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [showTypingGame, typingTimeLeft, game]);
+
+  // 引用タイマー
+  useEffect(() => {
+    if (!showQuoteModal || quoteTimeLeft <= 0) return;
+    const timer = setTimeout(() => setQuoteTimeLeft((prev) => prev - 1), 1000);
+    if (quoteTimeLeft === 1) {
+      setTimeout(() => {
+        const reduction = 0.5 + game.flameGuard * 0.1;
+        game.setRetweets((prev) => Math.floor(prev * reduction));
+        setShowQuoteModal(false);
+      }, 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [showQuoteModal, quoteTimeLeft, game]);
+
+  const handleReplySuccess = () => {
+    game.setReplies((prev) => prev + 1);
+    setShowTypingGame(false);
+    setTypedWord("");
+  };
+
+  const handleQuoteSuccess = () => {
+    const bonus = 2 + game.comboMultiplier * 0.5;
+    game.setRetweets((prev) => prev + Math.floor(game.effectiveClickPower * bonus));
+    setShowQuoteModal(false);
+    setQuoteText("");
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <Layout currentPage={currentPage} onNavigate={setCurrentPage} retweets={game.retweets} theme={game.theme}>
+      {!game.isLoaded ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">読み込み中...</div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+      ) : (
+        <>
+          {currentPage === "home" && (
+            <HomePage
+              game={game}
+              onReplyClick={startTypingGame}
+              onQuoteStart={startQuote}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+          )}
+
+          {currentPage === "shop" && (
+            <ShopPage game={game} />
+          )}
+
+          {currentPage === "achievements" && (
+            <AchievementsPage
+              unlockedAchievements={game.unlockedAchievements}
+              totalClicks={game.totalClicks}
+              totalCrits={game.totalCrits}
+              totalJackpots={game.totalJackpots}
+            />
+          )}
+
+          {currentPage === "settings" && (
+            <SettingsPage
+              exportSave={game.exportSave}
+              importSave={game.importSave}
+              resetSave={game.resetSave}
+              theme={game.theme}
+              changeTheme={game.changeTheme}
+            />
+          )}
+        </>
+      )}
+
+      <TypingModal
+        show={showTypingGame}
+        targetWord={targetWord}
+        typedWord={typedWord}
+        timeLeft={typingTimeLeft}
+        onType={setTypedWord}
+        onClose={() => setShowTypingGame(false)}
+        onSuccess={handleReplySuccess}
+      />
+
+      <TypingModal
+        show={showQuoteModal}
+        targetWord={quoteTargetWord}
+        typedWord={quoteText}
+        timeLeft={quoteTimeLeft}
+        onType={setQuoteText}
+        onClose={() => setShowQuoteModal(false)}
+        onSuccess={handleQuoteSuccess}
+        isQuote
+      />
+    </Layout>
   );
 }
