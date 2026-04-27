@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://retweet-clicker.hikamer.f5.si"),
   icons: { icon: "/icon.svg" },
   title: "リツイートクリッカー",
   description: "リツイートをひたすらクリックするゲーム。アップグレードを購入してリツイート数を増やそう！",
@@ -21,6 +22,13 @@ export const metadata: Metadata = {
     title: "リツイートクリッカー",
     description: "リツイートをひたすらクリックするゲーム。アップグレードを購入してリツイート数を増やそう！",
     type: "website",
+    images: ["/avatar.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "リツイートクリッカー",
+    description: "リツイートをひたすらクリックするゲーム。アップグレードを購入してリツイート数を増やそう！",
+    images: ["/avatar.png"],
   },
 };
 
