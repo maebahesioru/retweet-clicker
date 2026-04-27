@@ -12,6 +12,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// rebuild trigger
 export const metadata: Metadata = {
   metadataBase: new URL("https://retweet-clicker.hikamer.f5.si"),
   icons: { icon: "/icon.svg" },
