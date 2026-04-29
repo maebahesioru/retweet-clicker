@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 // rebuild trigger
 export const metadata: Metadata = {
   metadataBase: new URL("https://retweet-clicker.hikamer.f5.si"),
-  icons: { icon: "/icon.svg" },
+  icons: { icon: "/icon" },
   title: "リツイートクリッカー",
   description: "リツイートをひたすらクリックするゲーム。アップグレードを購入してリツイート数を増やそう！",
   keywords: ["リツイートクリッカー", "クリッカーゲーム", "放置ゲーム", "ブラウザゲーム"],
